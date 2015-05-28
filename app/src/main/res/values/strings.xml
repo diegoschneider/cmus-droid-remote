@@ -5,10 +5,13 @@
 
     <string name="passwordLabel">Password</string>
     <string name="commandLabel">Command</string>
-    <string name="sendCommandButtonLabel">Send Command</string>
+    <string name="setButtonLabel">Set</string>
     <string name="playButtonLabel">Play</string>
     <string name="pauseButtonLabel">Pause</string>
     <string name="stopButtonLabel">Stop</string>
+    <string name="nextButtonLabel">Next</string>
+    <string name="previousButtonLabel">Previous</string>
+    <string name="shuffleButtonLabel">Shuffle</string>
     <string name="vDownButtonLabel">Vol -</string>
     <string name="vUpButtonLabel">Vol +</string>
     <string name="muteButtonLabel">Mute</string>

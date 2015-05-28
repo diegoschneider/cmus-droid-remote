@@ -32,23 +32,18 @@
 		<EditText android:id="@+id/passwordText" android:inputType="textPassword"
 			android:layout_height="wrap_content" android:layout_width="wrap_content"
 			android:layout_weight="1" android:hint="Password"
-			android:layout_span="3" />
+			android:layout_span="2" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/setButtonLabel"
+			android:id="@+id/setButton"
+			android:layout_column="2" />
 	</TableRow>
+	<TableRow></TableRow>
+	<TableRow></TableRow>
 	<TableRow>
-		<TextView android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:text="@string/commandLabel"
-			android:layout_span="3" />
-	</TableRow>
-	<TableRow>
-		<Spinner android:layout_weight="1"
-			android:id="@+id/commandSpinner" android:prompt="@string/commandLabel" android:layout_height="fill_parent" android:layout_width="wrap_content" android:minHeight="60dp" android:padding="10dp"
-			android:layout_span="3" />
-	</TableRow>
-	<TableRow>
-		<Button android:layout_height="wrap_content" android:text="@string/sendCommandButtonLabel"
-			android:id="@+id/sendCommandButton" android:layout_width="fill_parent"
-			android:layout_weight="1"
-			android:layout_span="3" />
 
 	</TableRow>
 	<TableRow>
@@ -80,6 +75,32 @@
 		<Button
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
+			android:text="@string/previousButtonLabel"
+			android:id="@+id/previousButton"
+			android:layout_column="0" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/shuffleButtonLabel"
+			android:id="@+id/shuffleButton"
+			android:layout_column="1" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/nextButtonLabel"
+			android:id="@+id/nextButton"
+			android:layout_column="2" />
+	</TableRow>
+
+	<TableRow
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
 			android:text="@string/vUpButtonLabel"
 			android:id="@+id/vUpButton"
 			android:layout_column="0" />
@@ -98,5 +119,18 @@
 			android:id="@+id/muteButton"
 			android:layout_column="2" />
 
+	</TableRow>
+
+	<TableRow
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Status"
+			android:id="@+id/statusTextView"
+			android:layout_column="0"
+			android:layout_span="3" />
 	</TableRow>
 </TableLayout>

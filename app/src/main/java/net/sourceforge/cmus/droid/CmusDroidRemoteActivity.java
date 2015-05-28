@@ -1,5 +1,19 @@
 package net.sourceforge.cmus.droid;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,20 +27,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Spinner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * This code is so great, it hurts!!
@@ -228,15 +230,24 @@ public class CmusDroidRemoteActivity extends Activity {
 	private AutoCompleteTextView mHostText;
 	private EditText mPortText;
 	private EditText mPasswordText;
-	private Spinner mCommandSpinner;
-	private Button mSendCommandButton;
+	private Button mSetButton;
 	private Button mPlayButton;
 	private Button mPauseButton;
 	private Button mStopButton;
 	private Button mVUpButton;
 	private Button mVDownButton;
 	private Button mMuteButton;
+	private Button mPreviousButton;
+	private Button mNextButton;
+	private Button mShuffleButton;
+	private String host = null;
+	private int port = 3000;
+	private String password = null;
+	private boolean configured = false;
 	ArrayAdapter<String> hostAdapter;
+
+	private Timer statusTimer;
+	private TextView mStatusTextView;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -248,15 +259,17 @@ public class CmusDroidRemoteActivity extends Activity {
 		mHostText = (AutoCompleteTextView) findViewById(R.id.hostText);
 		mPortText = (EditText) findViewById(R.id.portText);
 		mPasswordText = (EditText) findViewById(R.id.passwordText);
-		mCommandSpinner = (Spinner) findViewById(R.id.commandSpinner);
-		mSendCommandButton = (Button) findViewById(R.id.sendCommandButton);
+		mSetButton = (Button) findViewById(R.id.setButton);
 		mPlayButton = (Button) findViewById(R.id.playButton);
 		mPauseButton = (Button) findViewById(R.id.pauseButton);
 		mStopButton = (Button) findViewById(R.id.stopButton);
 		mVUpButton = (Button) findViewById(R.id.vUpButton);
 		mVDownButton = (Button) findViewById(R.id.vDownButton);
 		mMuteButton = (Button) findViewById(R.id.muteButton);
-
+		mPreviousButton = (Button) findViewById(R.id.previousButton);
+		mNextButton  = (Button) findViewById(R.id.nextButton);
+		mShuffleButton = (Button) findViewById(R.id.shuffleButton);
+		mStatusTextView = (TextView) findViewById(R.id.statusTextView);
 
 		mPortText.setText("3000");
 		//DEBUG
@@ -271,12 +284,9 @@ public class CmusDroidRemoteActivity extends Activity {
 
 		//runSearchHosts();
 
-		mCommandSpinner.setAdapter(new ArrayAdapter<CmusCommand>(this,
-				android.R.layout.simple_spinner_item, CmusCommand.values()));
-
-		mSendCommandButton.setOnClickListener(new View.OnClickListener() {
+		mSetButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				onSendCommandClicked();
+				setConfig();
 			}
 		});
 
@@ -315,105 +325,56 @@ public class CmusDroidRemoteActivity extends Activity {
 				onSendCommand(CmusCommand.VOLUME_MUTE);
 			}
 		});
-	}
 
-	private void runSearchHosts() {
-
-		if (isUsingWifi()) {
-
-			new Thread(new Runnable() {
-
-				public void run() {
-					try {
-						InetAddress localhost = null;
-						for (final Enumeration<NetworkInterface> interfaces = NetworkInterface
-								.getNetworkInterfaces(); interfaces
-								.hasMoreElements() && localhost == null;) {
-							final NetworkInterface cur = interfaces.nextElement();
-
-							if (cur.getName().equals("lo")) {
-								continue;
-							}
-							Log.v(TAG, "interface " + cur.getName());
-
-							for (final Enumeration<InetAddress> inetAddresses = cur
-									.getInetAddresses(); inetAddresses
-									.hasMoreElements() && localhost == null;) {
-								final InetAddress inet_addr = inetAddresses
-										.nextElement();
-
-								if (!(inet_addr instanceof Inet4Address)) {
-									continue;
-								}
-
-								Log.v(TAG, "Found local addr: " + inet_addr);
-								localhost = inet_addr;
-							}
-						}
-
-						// this code assumes IPv4 is used
-
-						if (localhost != null) {
-
-							byte[] ip = localhost.getAddress();
-
-							for (int i = 1; i <= 254; i++) {
-
-								ip[3] = (byte) i;
-								final InetAddress address = InetAddress.getByAddress(ip);
-
-								if (address.isReachable(200)) {
-									Log.v(TAG, "Found an addr on LAN: "
-											+ address.getHostAddress());
-									CmusDroidRemoteActivity.this.runOnUiThread(new Runnable() {
-										public void run() {
-											hostAdapter.add(address.getHostAddress());
-										}
-									});
-									// machine is turned on and can be pinged
-								} else if (!address.getHostAddress().equals(
-										address.getHostName())) {
-									// machine is known in a DNS lookup
-								} else {
-									// the host address and host name are equal,
-									// meaning
-									// the
-									// host
-									// name could not be resolved
-								}
-							}
-
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Error: " + e.getMessage(), e);
-					}
-				}
-			}).start();
-		}
-	}
-
-	private void onSendCommandClicked() {
-		Log.v(TAG, "Send button clicked");
-		if (validate()) {
-			if (isUsingWifi()) {
-				sendCommand((CmusCommand) mCommandSpinner.getSelectedItem());
-			} else {
-				alert("Could not send command", "Not sending command: not on Wifi.");
+		mPreviousButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.PREV);
 			}
+		});
+
+		mNextButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.NEXT);
+			}
+		});
+
+		mShuffleButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.SHUFFLE);
+			}
+		});
+
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		statusTimer.cancel();
+		statusTimer.purge();
+		Log.v(TAG,"Configured: "+configured);
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+		if(statusTimer != null && configured) {
+			statusTimer = new Timer();
+			statusTimer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					sendCommand(CmusCommand.STATUS);
+				}
+			}, 0, 1000);
 		}
-		// finish();
 	}
 
 	private void onSendCommand(CmusCommand cmd) {
-		if (validate()) {
-			if(isUsingWifi()) {
-				sendCommand(cmd);
-			}
+		if(isUsingWifi()) {
+			sendCommand(cmd);
 		}
 	}
 
 	private void alert(String title, String message) {
-		Log.v(TAG, "Alert: "+message);
+		Log.v(TAG, "Alert: " + message);
 		new AlertDialog.Builder(this)
 				.setMessage(message)
 				.setTitle(title).show();
@@ -444,7 +405,7 @@ public class CmusDroidRemoteActivity extends Activity {
 		}
 
 		if (!valid) {
-			alert("Could not send command", "Not sending command, some parameters are invalid.");
+			alert("Could not save", "Some parameters are invalid.");
 		}
 
 		return valid;
@@ -468,8 +429,6 @@ public class CmusDroidRemoteActivity extends Activity {
 	private void handleStatus(String status) {
 
 		CmusStatus cmusStatus = new CmusStatus();
-
-		Log.v(TAG,"Status: "+status);
 		String[] strs = status.split("\n");
 
 		for (String str : strs) {
@@ -496,103 +455,127 @@ public class CmusDroidRemoteActivity extends Activity {
 			}
 		}
 
-		alert("Received Status", cmusStatus.toSimpleString());
+		mStatusTextView.setText(cmusStatus.toSimpleString());
+		//alert("Received Status", cmusStatus.toSimpleString());
 	}
 
-	private void sendCommand(final CmusCommand command) {
-
-		final String host,password;
-		final int port;
+	private void setConfig() {
 		host = mHostText.getText().toString();
 		port = Integer.parseInt(mPortText.getText().toString());
 		password = mPasswordText.getText().toString();
+		configured = validate();
 
-		new Thread(new Runnable() {
-			private String readAnswer(BufferedReader in) throws IOException {
-				StringBuilder answerBuilder = new StringBuilder();
+		if(configured) {
+			if(statusTimer != null) {
+				statusTimer.cancel();
+				statusTimer.purge();
+			}
+			statusTimer = new Timer();
+			statusTimer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					sendCommand(CmusCommand.STATUS);
+				}
+			}, 0, 1000);
+		}
+	}
 
-				String line;
-				while ((line = in.readLine()) != null && line.length() != 0) {
-					answerBuilder.append(line).append("\n");
+	public void sendCommand(final CmusCommand command) {
+
+		if(configured) {
+
+			new Thread(new Runnable() {
+				private String readAnswer(BufferedReader in) throws IOException {
+					StringBuilder answerBuilder = new StringBuilder();
+
+					String line;
+					while ((line = in.readLine()) != null && line.length() != 0) {
+						answerBuilder.append(line).append("\n");
+					}
+
+					return answerBuilder.toString();
 				}
 
-				return answerBuilder.toString();
-			}
-
-			private void handleCmdAnswer(BufferedReader in, final CmusCommand command) throws Exception {
-				final String cmdAnswer = readAnswer(in);
-				if (cmdAnswer != null && cmdAnswer.trim().length() != 0) {
-					Log.v(TAG, "Received answer to " + command.getLabel() + ": "
-							+ cmdAnswer.replaceAll("\n", "\n\t").replaceFirst("\n\t", "\n"));
-					CmusDroidRemoteActivity.this.runOnUiThread(new Runnable() {
-						public void run() {
-							if (command.equals(CmusCommand.STATUS)) {
-								handleStatus(cmdAnswer);
-							} else {
-								alert("Message from Cmus", "Received message: " + cmdAnswer);
+				private void handleCmdAnswer(BufferedReader in, final CmusCommand command) throws Exception {
+					final String cmdAnswer = readAnswer(in);
+					if (cmdAnswer != null && cmdAnswer.trim().length() != 0) {
+						//Log.v(TAG, "Received answer to " + command.getLabel() + ": "
+						//		+ cmdAnswer.replaceAll("\n", "\n\t").replaceFirst("\n\t", "\n"));
+						CmusDroidRemoteActivity.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (command.equals(CmusCommand.STATUS)) {
+									handleStatus(cmdAnswer);
+								} else {
+									alert("Message from Cmus", "Received message: " + cmdAnswer);
+								}
 							}
-						}
-					});
-				}
-			}
-
-			private void validAuth(BufferedReader in) throws Exception {
-				String passAnswer = readAnswer(in);
-				if (passAnswer != null && passAnswer.trim().length() != 0) {
-					throw new Exception("Could not login: " + passAnswer);
-				}
-			}
-
-			public void run() {
-				Socket socket = null;
-				BufferedReader in = null;
-				PrintWriter out = null;
-				try {
-					socket = new Socket(host, port);
-					Log.v(TAG, "Connected to " + host + ":" + port);
-					in = new BufferedReader(new InputStreamReader(socket.getInputStream()), Character.SIZE);
-					out = new PrintWriter(socket.getOutputStream(), true);
-
-					out.println("passwd " + password);
-					validAuth(in);
-					out.println(command.getCommand());
-					handleCmdAnswer(in, command);
-				} catch (final Exception e) {
-					Log.e(TAG, "Could not send the command", e);
-					CmusDroidRemoteActivity.this.runOnUiThread(new Runnable() {
-						public void run() {
-							alert("Could not send command", "Could not send the command: "
-									+ e.getLocalizedMessage());
-						}
-					});
-				} finally {
-					if (in != null) {
-						try {
-							in.close();
-						} catch (Exception e1) {
-							Log.e(TAG, "in Exception");
-						}
-						in = null;
-					}
-					if (out != null) {
-						try {
-							out.close();
-						} catch (Exception e1) {
-							Log.e(TAG, "out Exception");
-						}
-						out = null;
-					}
-					if (socket != null) {
-						try {
-							socket.close();
-						} catch (Exception e) {
-							Log.e(TAG, "socket Exception");
-						}
-						socket = null;
+						});
 					}
 				}
-			}
-		}).start();
+
+				private void validAuth(BufferedReader in) throws Exception {
+					String passAnswer = readAnswer(in);
+					if (passAnswer != null && passAnswer.trim().length() != 0) {
+						throw new Exception("Could not login: " + passAnswer);
+					}
+				}
+
+				public void run() {
+					Socket socket = null;
+					BufferedReader in = null;
+					PrintWriter out = null;
+					try {
+						socket = new Socket(host, port);
+						Log.v(TAG, "Connected to " + host + ":" + port);
+						in = new BufferedReader(new InputStreamReader(socket.getInputStream()), Character.SIZE);
+						out = new PrintWriter(socket.getOutputStream(), true);
+
+						out.println("passwd " + password);
+						validAuth(in);
+						out.println(command.getCommand());
+						handleCmdAnswer(in, command);
+					} catch (final Exception e) {
+						Log.e(TAG, "Could not send the command", e);
+						statusTimer.cancel();
+						statusTimer.purge();
+						configured = false;
+						CmusDroidRemoteActivity.this.runOnUiThread(new Runnable() {
+							public void run() {
+								alert("Could not send command", "Could not send the command: "
+										+ e.getLocalizedMessage());
+							}
+						});
+					} finally {
+						if (in != null) {
+							try {
+								in.close();
+							} catch (Exception e1) {
+								Log.e(TAG, "in Exception");
+							}
+							in = null;
+						}
+						if (out != null) {
+							try {
+								out.close();
+							} catch (Exception e1) {
+								Log.e(TAG, "out Exception");
+							}
+							out = null;
+						}
+						if (socket != null) {
+							try {
+								socket.close();
+							} catch (Exception e) {
+								Log.e(TAG, "socket Exception");
+							}
+							socket = null;
+						}
+					}
+				}
+			}).start();
+
+		} else {
+			alert("Unconfigured", "Configure the IP/Port/Password");
+		}
 	}
 
 	private boolean isUsingWifi() {
