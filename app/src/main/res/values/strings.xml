@@ -15,6 +15,8 @@
     <string name="vDownButtonLabel">Vol -</string>
     <string name="vUpButtonLabel">Vol +</string>
     <string name="muteButtonLabel">Mute</string>
+    <string name="seekLeftButtonLabel">-5</string>
+    <string name="seekRightButtonLabel">+5</string>
 
     <string name="portHint">Port</string>
 </resources>

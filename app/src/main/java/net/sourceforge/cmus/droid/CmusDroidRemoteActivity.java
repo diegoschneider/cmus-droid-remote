@@ -52,13 +52,14 @@ public class CmusDroidRemoteActivity extends Activity {
 		VOLUME_MUTE("Mute", "vol -100%"),
 		VOLUME_UP("Volume +", "vol +10%"),
 		VOLUME_DOWN("Volume -", "vol -10%"),
-		// SEEK("seek %s"),
+		SEEKLEFT("SEEK -5", "seek -5"),
+		SEEKRIGHT("SEEK +5","seek +5"),
 		STATUS("Status", "status");
 
 		private final String label;
 		private final String command;
 
-		private CmusCommand(String label, String command) {
+		CmusCommand(String label, String command) {
 			this.label = label;
 			this.command = command;
 		}
@@ -240,6 +241,9 @@ public class CmusDroidRemoteActivity extends Activity {
 	private Button mPreviousButton;
 	private Button mNextButton;
 	private Button mShuffleButton;
+	private Button mSeekLeftButton;
+	private Button mSeekRightButton;
+
 	private String host = null;
 	private int port = 3000;
 	private String password = null;
@@ -270,6 +274,8 @@ public class CmusDroidRemoteActivity extends Activity {
 		mNextButton  = (Button) findViewById(R.id.nextButton);
 		mShuffleButton = (Button) findViewById(R.id.shuffleButton);
 		mStatusTextView = (TextView) findViewById(R.id.statusTextView);
+		mSeekLeftButton = (Button) findViewById(R.id.seekLeftButton);
+		mSeekRightButton = (Button) findViewById(R.id.seekRightButton);
 
 		mPortText.setText("3000");
 		//DEBUG
@@ -281,8 +287,6 @@ public class CmusDroidRemoteActivity extends Activity {
 				new ArrayList<String>());
 
 		mHostText.setAdapter(hostAdapter);
-
-		//runSearchHosts();
 
 		mSetButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -344,6 +348,18 @@ public class CmusDroidRemoteActivity extends Activity {
 			}
 		});
 
+		mSeekLeftButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.SEEKLEFT);
+			}
+		});
+
+		mSeekRightButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.SEEKRIGHT);
+			}
+		});
+
 	}
 
 	@Override
@@ -351,7 +367,6 @@ public class CmusDroidRemoteActivity extends Activity {
 		super.onStop();
 		statusTimer.cancel();
 		statusTimer.purge();
-		Log.v(TAG,"Configured: "+configured);
 	}
 
 	@Override
@@ -525,7 +540,7 @@ public class CmusDroidRemoteActivity extends Activity {
 					PrintWriter out = null;
 					try {
 						socket = new Socket(host, port);
-						Log.v(TAG, "Connected to " + host + ":" + port);
+						Log.v(TAG, command+" - Connected to " + host + ":" + port);
 						in = new BufferedReader(new InputStreamReader(socket.getInputStream()), Character.SIZE);
 						out = new PrintWriter(socket.getOutputStream(), true);
 
@@ -568,6 +583,11 @@ public class CmusDroidRemoteActivity extends Activity {
 								Log.e(TAG, "socket Exception");
 							}
 							socket = null;
+						}
+						try {
+							this.finalize();
+						} catch (Throwable throwable) {
+							throwable.printStackTrace();
 						}
 					}
 				}
