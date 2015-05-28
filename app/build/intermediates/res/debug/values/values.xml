@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- From: file:/C:/Users/Diego/AndroidStudioProjects/cmus-droid-remote/app/src/main/res/values/strings.xml -->
+    <eat-comment/>
+    <string name="app_name">Cmus Droid Remote</string>
+    <string name="commandLabel">Command</string>
+    <string name="hostAndPortLabel">Host/IP &amp; Port of Cmus</string>
+    <string name="passwordLabel">Password</string>
+    <string name="sendCommandButtonLabel">Send Command</string>
+</resources>
