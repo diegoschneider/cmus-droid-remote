@@ -1,42 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical" android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
-	<TableLayout android:layout_width="fill_parent"
-		android:layout_height="fill_parent">
-		<TableRow>
-			<TextView android:text="@string/hostAndPortLabel"
-				android:layout_width="wrap_content" android:layout_height="wrap_content" />
-		</TableRow>
-		<TableRow>
-			<AutoCompleteTextView android:id="@+id/hostText" android:completionThreshold="1" android:layout_height="wrap_content" android:layout_weight="1" android:layout_width="wrap_content" android:hint="Host or IP" />
-			<EditText android:id="@+id/portText" android:layout_height="wrap_content"
-				android:inputType="number" android:layout_width="wrap_content"
-				android:layout_weight="1" android:hint="Port">
-				<requestFocus />
-			</EditText>
-		</TableRow>
-		<TableRow>
-			<TextView android:text="@string/passwordLabel"
-				android:layout_width="wrap_content" android:layout_height="wrap_content" />
-		</TableRow>
-		<TableRow>
-			<EditText android:id="@+id/passwordText" android:inputType="textPassword"
-				android:layout_height="wrap_content" android:layout_width="wrap_content"
-				android:layout_weight="1" android:hint="Password"/>
-		</TableRow>
-		<TableRow>
-			<TextView android:layout_width="wrap_content"
-				android:layout_height="wrap_content" android:text="@string/commandLabel" />
-		</TableRow>
-		<TableRow>
-			<Spinner android:layout_weight="1"
-				android:id="@+id/commandSpinner" android:prompt="@string/commandLabel" android:layout_height="fill_parent" android:layout_width="wrap_content" android:minHeight="60dp" android:padding="10dp"/>
-		</TableRow>
-		<TableRow>
-			<Button android:layout_height="wrap_content" android:text="@string/sendCommandButtonLabel"
-				android:id="@+id/sendCommandButton" android:layout_width="fill_parent"
-				android:layout_weight="1" />
-		</TableRow>
-	</TableLayout>
-</LinearLayout>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	tools:context=".CmusDroidRemoteActivity"
+	android:baselineAligned="false"
+	android:stretchColumns="*"
+	android:shrinkColumns="*"
+	android:orientation="vertical">
+	<TableRow>
+		<TextView android:text="@string/hostAndPortLabel"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_span="3" />
+	</TableRow>
+	<TableRow>
+		<AutoCompleteTextView android:id="@+id/hostText" android:completionThreshold="1" android:layout_height="wrap_content" android:layout_weight="1" android:layout_width="wrap_content" android:hint="Host or IP"
+			android:layout_span="2" />
+		<EditText android:id="@+id/portText" android:layout_height="wrap_content"
+			android:inputType="number" android:layout_width="wrap_content"
+			android:layout_weight="1" android:hint="@string/portHint"
+			android:layout_column="2">
+			<requestFocus />
+		</EditText>
+	</TableRow>
+	<TableRow>
+		<TextView android:text="@string/passwordLabel"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_span="3" />
+	</TableRow>
+	<TableRow>
+		<EditText android:id="@+id/passwordText" android:inputType="textPassword"
+			android:layout_height="wrap_content" android:layout_width="wrap_content"
+			android:layout_weight="1" android:hint="Password"
+			android:layout_span="3" />
+	</TableRow>
+	<TableRow>
+		<TextView android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/commandLabel"
+			android:layout_span="3" />
+	</TableRow>
+	<TableRow>
+		<Spinner android:layout_weight="1"
+			android:id="@+id/commandSpinner" android:prompt="@string/commandLabel" android:layout_height="fill_parent" android:layout_width="wrap_content" android:minHeight="60dp" android:padding="10dp"
+			android:layout_span="3" />
+	</TableRow>
+	<TableRow>
+		<Button android:layout_height="wrap_content" android:text="@string/sendCommandButtonLabel"
+			android:id="@+id/sendCommandButton" android:layout_width="fill_parent"
+			android:layout_weight="1"
+			android:layout_span="3" />
+
+	</TableRow>
+	<TableRow>
+		<Button
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/playButtonLabel"
+			android:id="@+id/playButton"
+			android:layout_span="1" />
+		<Button
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/pauseButtonLabel"
+			android:id="@+id/pauseButton"
+			android:layout_span="1" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/stopButtonLabel"
+			android:id="@+id/stopButton"
+			android:layout_column="2" />
+	</TableRow>
+
+	<TableRow
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/vUpButtonLabel"
+			android:id="@+id/vUpButton"
+			android:layout_column="0" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/vDownButtonLabel"
+			android:id="@+id/vDownButton"
+			android:layout_column="1" />
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/muteButtonLabel"
+			android:id="@+id/muteButton"
+			android:layout_column="2" />
+
+	</TableRow>
+</TableLayout>

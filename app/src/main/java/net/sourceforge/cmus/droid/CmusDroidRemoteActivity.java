@@ -36,6 +36,7 @@ import android.widget.Spinner;
  * 
  */
 public class CmusDroidRemoteActivity extends Activity {
+
 	public enum CmusCommand {
 		REPEAT("Repeat", "toggle repeat"),
 		SHUFFLE("Shuffle", "toggle shuffle"),
@@ -216,6 +217,7 @@ public class CmusDroidRemoteActivity extends Activity {
 			strBuilder.append("Artist: ").append(getTag("artist")).append("\n");
 			strBuilder.append("Title: ").append(getTag("title")).append("\n");
 			strBuilder.append("Position: ").append(getPositionPercent()).append("\n");
+			strBuilder.append("File: ").append(getTag("file")).append("\n");
 			strBuilder.append("Volume: ").append(getUnifiedVolume()).append("\n");
 			return strBuilder.toString();
 		}
@@ -228,6 +230,12 @@ public class CmusDroidRemoteActivity extends Activity {
 	private EditText mPasswordText;
 	private Spinner mCommandSpinner;
 	private Button mSendCommandButton;
+	private Button mPlayButton;
+	private Button mPauseButton;
+	private Button mStopButton;
+	private Button mVUpButton;
+	private Button mVDownButton;
+	private Button mMuteButton;
 	ArrayAdapter<String> hostAdapter;
 
 	/** Called when the activity is first created. */
@@ -242,8 +250,18 @@ public class CmusDroidRemoteActivity extends Activity {
 		mPasswordText = (EditText) findViewById(R.id.passwordText);
 		mCommandSpinner = (Spinner) findViewById(R.id.commandSpinner);
 		mSendCommandButton = (Button) findViewById(R.id.sendCommandButton);
+		mPlayButton = (Button) findViewById(R.id.playButton);
+		mPauseButton = (Button) findViewById(R.id.pauseButton);
+		mStopButton = (Button) findViewById(R.id.stopButton);
+		mVUpButton = (Button) findViewById(R.id.vUpButton);
+		mVDownButton = (Button) findViewById(R.id.vDownButton);
+		mMuteButton = (Button) findViewById(R.id.muteButton);
+
 
 		mPortText.setText("3000");
+		//DEBUG
+		mHostText.setText("192.168.10.130");
+		mPasswordText.setText("qweasd");
 
 		hostAdapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_dropdown_item_1line,
@@ -251,7 +269,7 @@ public class CmusDroidRemoteActivity extends Activity {
 
 		mHostText.setAdapter(hostAdapter);
 
-		runSearchHosts();
+		//runSearchHosts();
 
 		mCommandSpinner.setAdapter(new ArrayAdapter<CmusCommand>(this,
 				android.R.layout.simple_spinner_item, CmusCommand.values()));
@@ -259,6 +277,42 @@ public class CmusDroidRemoteActivity extends Activity {
 		mSendCommandButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				onSendCommandClicked();
+			}
+		});
+
+		mPlayButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.PLAY);
+			}
+		});
+
+		mPauseButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.PAUSE);
+			}
+		});
+
+		mStopButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.STOP);
+			}
+		});
+
+		mVUpButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.VOLUME_UP);
+			}
+		});
+
+		mVDownButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.VOLUME_DOWN);
+			}
+		});
+
+		mMuteButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				onSendCommand(CmusCommand.VOLUME_MUTE);
 			}
 		});
 	}
@@ -339,13 +393,10 @@ public class CmusDroidRemoteActivity extends Activity {
 	}
 
 	private void onSendCommandClicked() {
-		Log.v(TAG, "Save button clicked");
+		Log.v(TAG, "Send button clicked");
 		if (validate()) {
 			if (isUsingWifi()) {
-				sendCommand(mHostText.getText().toString(),
-						Integer.parseInt(mPortText.getText().toString()),
-						mPasswordText.getText().toString(),
-						(CmusCommand) mCommandSpinner.getSelectedItem());
+				sendCommand((CmusCommand) mCommandSpinner.getSelectedItem());
 			} else {
 				alert("Could not send command", "Not sending command: not on Wifi.");
 			}
@@ -353,8 +404,16 @@ public class CmusDroidRemoteActivity extends Activity {
 		// finish();
 	}
 
+	private void onSendCommand(CmusCommand cmd) {
+		if (validate()) {
+			if(isUsingWifi()) {
+				sendCommand(cmd);
+			}
+		}
+	}
+
 	private void alert(String title, String message) {
-		Log.v(TAG, message);
+		Log.v(TAG, "Alert: "+message);
 		new AlertDialog.Builder(this)
 				.setMessage(message)
 				.setTitle(title).show();
@@ -410,6 +469,7 @@ public class CmusDroidRemoteActivity extends Activity {
 
 		CmusStatus cmusStatus = new CmusStatus();
 
+		Log.v(TAG,"Status: "+status);
 		String[] strs = status.split("\n");
 
 		for (String str : strs) {
@@ -419,14 +479,19 @@ public class CmusDroidRemoteActivity extends Activity {
 				int firstSpace = str.indexOf(' ');
 				String type = str.substring(0, firstSpace);
 				String value = str.substring(firstSpace + 1);
-				if (type.equals("status")) {
-					cmusStatus.setStatus(value);
-				} else if (type.equals("file")) {
-					cmusStatus.setFile(value);
-				} else if (type.equals("duration")) {
-					cmusStatus.setDuration(value);
-				} else if (type.equals("position")) {
-					cmusStatus.setPosition(value);
+				switch (type) {
+					case "status":
+						cmusStatus.setStatus(value);
+						break;
+					case "file":
+						cmusStatus.setFile(value);
+						break;
+					case "duration":
+						cmusStatus.setDuration(value);
+						break;
+					case "position":
+						cmusStatus.setPosition(value);
+						break;
 				}
 			}
 		}
@@ -434,8 +499,13 @@ public class CmusDroidRemoteActivity extends Activity {
 		alert("Received Status", cmusStatus.toSimpleString());
 	}
 
-	private void sendCommand(final String host, final int port,
-			final String password, final CmusCommand command) {
+	private void sendCommand(final CmusCommand command) {
+
+		final String host,password;
+		final int port;
+		host = mHostText.getText().toString();
+		port = Integer.parseInt(mPortText.getText().toString());
+		password = mPasswordText.getText().toString();
 
 		new Thread(new Runnable() {
 			private String readAnswer(BufferedReader in) throws IOException {
@@ -500,6 +570,7 @@ public class CmusDroidRemoteActivity extends Activity {
 						try {
 							in.close();
 						} catch (Exception e1) {
+							Log.e(TAG, "in Exception");
 						}
 						in = null;
 					}
@@ -507,6 +578,7 @@ public class CmusDroidRemoteActivity extends Activity {
 						try {
 							out.close();
 						} catch (Exception e1) {
+							Log.e(TAG, "out Exception");
 						}
 						out = null;
 					}
@@ -514,6 +586,7 @@ public class CmusDroidRemoteActivity extends Activity {
 						try {
 							socket.close();
 						} catch (Exception e) {
+							Log.e(TAG, "socket Exception");
 						}
 						socket = null;
 					}

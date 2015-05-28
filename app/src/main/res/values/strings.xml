@@ -2,7 +2,16 @@
 <resources>
     <string name="hostAndPortLabel">Host/IP &amp; Port of Cmus</string>
     <string name="app_name">Cmus Droid Remote</string>
+
     <string name="passwordLabel">Password</string>
     <string name="commandLabel">Command</string>
     <string name="sendCommandButtonLabel">Send Command</string>
+    <string name="playButtonLabel">Play</string>
+    <string name="pauseButtonLabel">Pause</string>
+    <string name="stopButtonLabel">Stop</string>
+    <string name="vDownButtonLabel">Vol -</string>
+    <string name="vUpButtonLabel">Vol +</string>
+    <string name="muteButtonLabel">Mute</string>
+
+    <string name="portHint">Port</string>
 </resources>

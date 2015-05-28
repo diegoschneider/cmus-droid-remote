@@ -1,2 +1,6 @@
-bin
-.settings
+local.properties
+app/build
+.gradle
+/.idea/workspace.xml
+/.idea/libraries
+/build
